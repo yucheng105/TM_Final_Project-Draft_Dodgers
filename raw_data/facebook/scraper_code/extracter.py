@@ -18,39 +18,54 @@ def process_single_facebook_csv(input_file, output_file):
     
     for index, row in df.iterrows():
         content = str(row['content'])
-        lines = content.split('\n')
         
-        # 確保至少有2行資料
-        if len(lines) >= 2:
-            user_name = lines[0].strip() if lines[0] else ''
-            comment_content = lines[1].strip() if len(lines) > 1 else ''
+        lines = content.split('\n')
+
+        ############
+        # username
+        ############
+
+        # 頭號粉絲
+        if lines[0] == "頭號粉絲":
+            user_name = lines[1]
+            comment_index = 2
+        
+        # 一般粉絲
+        else:
+            user_name = lines[0]
+            comment_index = 1
+
+
+        comment_start_index = comment_index
+        comment_end_index = 0
+        time_index = 0
+
+        '''i = -1
+        while (True):
+            if lines[i] == "讚":
+                time_index = i - 1
+                comment_end_index = i - 1
+                break'''
+        
+        comment_time = lines[time_index]
+        comment_content = lines[comment_start_index:comment_end_index]
+
+        # 已編輯留言
+        if lines[-1] == "已編輯":
+            comment_time = lines[-4]
+            comment_content = lines[comment_index:-4]
+
+        # 正常留言
+        else:
+            comment_time = lines[-3]
+            comment_content = lines[comment_index:-3]
             
-            # 處理時間（第三行）
-            comment_time = ''
-            if len(lines) > 2:
-                time_text = lines[2].strip()
-                # 更靈活的時間提取
-                time_patterns = [
-                    r'(\d+\s*[天週小時分鐘秒月年]+)',
-                    r'(\d+\s*[dD][天aA]*|[wW][週周])',
-                    r'(\d+\s*[hH][小時]*|[mM][分鐘]*)'
-                ]
-                
-                for pattern in time_patterns:
-                    time_match = re.search(pattern, time_text)
-                    if time_match:
-                        comment_time = time_match.group(1)
-                        break
-                
-                if not comment_time:
-                    comment_time = time_text
-            
-            processed_data.append({
-                'comment_id': index + 1,
-                '用戶名稱': user_name,
-                '留言內容': comment_content,
-                '留言時間': comment_time
-            })
+        processed_data.append({
+            'comment_id': index + 1,
+            '用戶名稱': user_name,
+            '留言內容': "\n".join(comment_content),
+            '留言時間': comment_time
+        })
     
     new_df = pd.DataFrame(processed_data)
     new_df.to_csv(output_file, index=False, encoding='utf-8-sig')
@@ -89,7 +104,7 @@ if __name__ == "__main__":
     # process_single_facebook_csv("facebook_comments.csv", "processed_comments.csv")
     
     # 多檔案處理'''
-process_multiple_files("C:\\大學\\大三上\\文字探勘初論\\期末報告Git\\TM_Final_Project-Draft_Dodgers\\raw_data\\facebook\\scraped_unprocessed_raw_data", "C:\\大學\\大三上\\文字探勘初論\\期末報告Git\\TM_Final_Project-Draft_Dodgers\\raw_data\\facebook\\scraped_prettified_raw_data")
+process_multiple_files("C:\\大學\\大三上\\文字探勘初論\\期末報告Git\\TM_Final_Project-Draft_Dodgers\\raw_data\\facebook\\scraper_code\\scraped_unprocessed_raw_data", "C:\\大學\\大三上\\文字探勘初論\\期末報告Git\\TM_Final_Project-Draft_Dodgers\\raw_data\\facebook\\scraped_cleansed_raw_data")
 
 
 
