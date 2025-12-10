@@ -1,14 +1,12 @@
 import time
 import json
 import os
+import re
 import pandas as pd
 from selenium import webdriver
 from selenium.webdriver.common.by import By
 from selenium.webdriver.common.keys import Keys
 from selenium.webdriver.chrome.options import Options
-from selenium.webdriver.support.ui import WebDriverWait
-from selenium.webdriver.support import expected_conditions as EC
-
 
 # =====================================================
 # 初始化瀏覽器
@@ -24,7 +22,7 @@ def init_driver():
 
 
 # =====================================================
-# 讓頁面滾動到底（強化版）
+# 滾動頁面到底部（強化版）
 # =====================================================
 def scroll_to_bottom(driver, max_pause=3):
     last_height = driver.execute_script("return document.body.scrollHeight")
@@ -32,7 +30,7 @@ def scroll_to_bottom(driver, max_pause=3):
 
     while True:
         driver.find_element(By.TAG_NAME, "body").send_keys(Keys.END)
-        time.sleep(1.5)
+        time.sleep(1.2)
 
         new_height = driver.execute_script("return document.body.scrollHeight")
         if new_height == last_height:
@@ -47,35 +45,64 @@ def scroll_to_bottom(driver, max_pause=3):
 
 
 # =====================================================
-# 自動展開留言、回覆（Threads 常見按鈕）
+# 自動展開留言按鈕
 # =====================================================
 def auto_expand(driver):
 
-    expand_texts = [
+    expand_keywords = [
         "View replies", "查看回覆",
-        "Show all", "查看全部",
+        "View all", "查看全部",
         "Show more", "顯示更多",
-        "See more", "查看更多"
+        "See more", "查看更多",
+        "See translation", "查看翻譯"
     ]
 
-    for _ in range(3):  # 嘗試三輪展開
-        buttons = driver.find_elements(By.TAG_NAME, "button")
-        clicked = False
-        for b in buttons:
-            try:
-                if any(t in b.text for t in expand_texts):
-                    b.click()
-                    time.sleep(1.2)
-                    clicked = True
-            except:
-                pass
-
-        if not clicked:
-            break
+    buttons = driver.find_elements(By.TAG_NAME, "button")
+    for b in buttons:
+        try:
+            if any(k in b.text for k in expand_keywords):
+                b.click()
+                time.sleep(1)
+        except:
+            pass
 
 
 # =====================================================
-# 多重 selector：盡可能抓到留言 DOM
+# 多 selector：抓貼文內文
+# =====================================================
+def get_post_text(driver):
+
+    selectors = [
+        "article div[dir='auto']",
+        "article span[dir='auto']",
+        "div[role='article'] div[dir='auto']",
+        "div.x1lliihq",
+        "div.x1fc57z9",
+        "div.x16md31u",
+    ]
+
+    texts = []
+
+    for sel in selectors:
+        elements = driver.find_elements(By.CSS_SELECTOR, sel)
+        for e in elements:
+            try:
+                t = e.text.strip()
+                if len(t) > 6:  # 避免抓到 icon、空元素
+                    texts.append(t)
+            except:
+                pass
+
+    if not texts:
+        return ""
+
+    # 去重複並合併段落
+    full = "\n".join(list(dict.fromkeys(texts)))
+    return full
+
+
+# =====================================================
+# 多 selector：抓留言區塊
 # =====================================================
 def get_comment_blocks(driver):
 
@@ -89,18 +116,18 @@ def get_comment_blocks(driver):
         "div[dir='auto']"
     ]
 
-    collected = []
-    for selector in selectors:
-        elements = driver.find_elements(By.CSS_SELECTOR, selector)
-        for e in elements:
-            if e not in collected:
-                collected.append(e)
+    blocks = []
+    for sel in selectors:
+        found = driver.find_elements(By.CSS_SELECTOR, sel)
+        for e in found:
+            if e not in blocks:
+                blocks.append(e)
 
-    return collected
+    return blocks
 
 
 # =====================================================
-# 解析貼文
+# 解析單篇貼文：回傳 → 貼文全文 + 全部留言
 # =====================================================
 def scrape_post(driver, url):
     print(f"\n開始爬取：{url}")
@@ -111,65 +138,71 @@ def scrape_post(driver, url):
     scroll_to_bottom(driver)
     auto_expand(driver)
 
-    # --- 抓貼文本體 ---
-    try:
-        post_text = driver.find_element(By.CSS_SELECTOR, "article div[dir='auto']").text
-    except:
-        post_text = ""
+    # -------- 抓貼文本體 --------
+    post_text = get_post_text(driver)
 
-    comment_blocks = get_comment_blocks(driver)
-    rows = []
+    # -------- 抓留言 --------
+    blocks = get_comment_blocks(driver)
+    comments = []
 
-    for block in comment_blocks:
-
-        try:
-            raw = block.text.strip()
-        except:
-            raw = ""
-
+    for blk in blocks:
+        raw = blk.text.strip()
         if not raw:
             continue
-
-        # 避開非留言（例如貼文自己）
-        if len(raw) < 2:
-            continue
-
-        # 嘗試抓作者名稱
+        
+        # --- 嘗試抓作者 ---
         try:
-            author = block.find_element(By.CSS_SELECTOR, "span strong").text
+            author = blk.find_element(By.CSS_SELECTOR, "span strong").text
         except:
             author = ""
 
-        # 留言內容 = 整塊文本 + 移除作者
-        content = raw.replace(author, "").strip()
+        # --- 時間（YYYY-MM-DD） ---
+        date_match = re.search(r"\d{4}-\d{2}-\d{2}", raw)
+        comment_time = date_match.group(0) if date_match else ""
 
-        if len(content) == 0:
+        # --- 清理 message ---
+        cleaned = raw
+        if author:
+            cleaned = cleaned.replace(author, "")
+        if comment_time:
+            cleaned = cleaned.replace(comment_time, "")
+
+        comment_text = cleaned.strip()
+        if len(comment_text) == 0:
             continue
 
-        rows.append({
+        comments.append({
             "post_url": url,
             "post_text": post_text,
             "comment_author": author,
-            "comment_text": content
+            "comment_time": comment_time,
+            "comment_text": comment_text
         })
 
-    print(f"抓到 {len(rows)} 筆留言")
-    return rows
+    print(f"抓到 {len(comments)} 則留言")
+
+    return {
+        "post_url": url,
+        "post_text": post_text,
+        "comments": comments
+    }
 
 
 # =====================================================
-# 多藝人分類（同一留言可以出現在多 CSV）
+# 貼文分類邏輯：依「貼文內文」決定歸屬藝人
 # =====================================================
-def classify_by_artist(df, artist_keywords):
+def classify_post_by_artist(posts, artist_keywords):
 
     result = { artist: [] for artist in artist_keywords.keys() }
 
-    for _, row in df.iterrows():
-        text = row["comment_text"]
+    for post in posts:
+        text = post["post_text"]
 
-        for artist, keys in artist_keywords.items():
-            if any(k in text for k in keys):
-                result[artist].append(row.to_dict())
+        for artist, keywords in artist_keywords.items():
+            # 貼文內文有提到該藝人？
+            if any(k in text for k in keywords):
+                # 整篇加入該藝人（包含全部留言）
+                result[artist].extend(post["comments"])
 
     return result
 
@@ -179,11 +212,11 @@ def classify_by_artist(df, artist_keywords):
 # =====================================================
 def main():
 
-    # 讀取 URL 清單
+    # --- 載入 URLs ---
     with open("urls.txt", "r", encoding="utf-8") as f:
         urls = [u.strip() for u in f if u.strip()]
 
-    # 讀取藝人關鍵字
+    # --- 載入藝人關鍵字 ---
     with open("artists.json", "r", encoding="utf-8") as f:
         artist_keywords = json.load(f)
 
@@ -191,26 +224,37 @@ def main():
 
     driver = init_driver()
     driver.get("https://www.threads.net/login")
-    input("請登入 Threads，登入完成後按 Enter 開始爬蟲...")
+    input("\n請登入 Threads 後按 Enter 開始爬蟲...\n")
 
-    all_rows = []
+    all_posts = []
 
     for url in urls:
-        rows = scrape_post(driver, url)
-        all_rows.extend(rows)
+        data = scrape_post(driver, url)
+        all_posts.append(data)
 
     driver.quit()
 
-    df = pd.DataFrame(all_rows)
+    # =====================================================
+    # 輸出全部留言（不分類）
+    # =====================================================
+    all_comments = []
+    for post in all_posts:
+        all_comments.extend(post["comments"])
 
-    # --- 分類 ---
-    classified = classify_by_artist(df, artist_keywords)
+    df_all = pd.DataFrame(all_comments)
+    df_all.to_csv("output/all_comments.csv", encoding="utf-8-sig", index=False)
+    print(f"\n已輸出：output/all_comments.csv（共 {len(df_all)} 則留言）")
 
-    # --- 輸出 CSV ---
+
+    # =====================================================
+    # 依「貼文全文」分類至藝人 CSV
+    # =====================================================
+    classified = classify_post_by_artist(all_posts, artist_keywords)
+
     for artist, rows in classified.items():
-        out_path = f"output/{artist}.csv"
-        pd.DataFrame(rows).to_csv(out_path, encoding="utf-8-sig", index=False)
-        print(f"已輸出：{out_path}（{len(rows)} 筆留言）")
+        outpath = f"output/{artist}.csv"
+        pd.DataFrame(rows).to_csv(outpath, encoding="utf-8-sig", index=False)
+        print(f"已輸出：{outpath}（{len(rows)} 則留言）")
 
     print("\n=== 爬蟲全部完成 ===")
 
