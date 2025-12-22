@@ -1,8 +1,9 @@
+import os
+
 from transformers import pipeline, AutoTokenizer, AutoModelForSequenceClassification
 import json
 import torch
 from tqdm import tqdm
-import os
 
 def main():
     # Check for GPU
@@ -10,8 +11,8 @@ def main():
     print(f"Using device: {device}")
 
     # Input and Output files
-    input_file = 'dcard_comments_by_keyword.json'
-    output_file = 'dcard_sentiment_by_keyword.json'
+    input_file = 'dcard/dcard_comments_by_keyword.json'
+    output_file = 'dcard/dcard_sentiment_by_keyword.json'
 
     # Load data
     if not os.path.exists(input_file):
@@ -27,11 +28,18 @@ def main():
 
     print(f"Loading model: {model_name}...")
     try:
-        tokenizer = AutoTokenizer.from_pretrained(model_name)
+        tokenizer = AutoTokenizer.from_pretrained(model_name, use_fast=False)
         model = AutoModelForSequenceClassification.from_pretrained(model_name)
+        
+        # Move model to device
+        if device >= 0:
+            model = model.to(f'cuda:{device}')
+        
         sentiment_pipeline = pipeline("sentiment-analysis", model=model, tokenizer=tokenizer, device=device)
     except Exception as e:
         print(f"Failed to load model: {e}")
+        import traceback
+        traceback.print_exc()
         return
 
     # Label mapping
@@ -99,7 +107,7 @@ def main():
         json.dump(results, f, ensure_ascii=False, indent=4)
     
     # Print summary and save to file
-    summary_file = 'sentiment_summary.txt'
+    summary_file = 'dcard/sentiment_summary.txt'
     print(f"Saving summary to {summary_file}...")
     
     with open(summary_file, 'w', encoding='utf-8') as f_summary:

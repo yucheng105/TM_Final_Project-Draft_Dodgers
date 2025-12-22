@@ -1,0 +1,7 @@
+torch
+transformer
+selenium
+protobuf
+sentencepiece
+undetected_chromedriver
+requests
