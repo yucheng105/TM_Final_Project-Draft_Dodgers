@@ -11,8 +11,8 @@ def main():
     print(f"Using device: {device}")
 
     # Input and Output files
-    input_file = 'dcard/dcard_comments_by_keyword.json'
-    output_file = 'dcard/dcard_sentiment_by_keyword.json'
+    input_file = 'dcard_comments_by_keyword.json'
+    output_file = 'dcard_sentiment_by_keyword.json'
 
     # Load data
     if not os.path.exists(input_file):
@@ -107,7 +107,7 @@ def main():
         json.dump(results, f, ensure_ascii=False, indent=4)
     
     # Print summary and save to file
-    summary_file = 'dcard/sentiment_summary.txt'
+    summary_file = 'sentiment_summary.txt'
     print(f"Saving summary to {summary_file}...")
     
     with open(summary_file, 'w', encoding='utf-8') as f_summary:

@@ -14,14 +14,14 @@ import undetected_chromedriver as uc
 # 關鍵字設定：每個關鍵字可指定時間範圍
 # 格式: {"keyword": "關鍵字", "start_date": "YYYY-MM-DD", "end_date": "YYYY-MM-DD"}
 KEYWORDS_CONFIG = [
-    # {"keyword": "王大陸", "start_date": "2025-02-18", "end_date": "2025-02-25"},
-    # {"keyword": "坤達", "start_date": "2025-10-21", "end_date": "2025-10-28"},
-    # {"keyword": "修杰楷", "start_date": "2025-10-21", "end_date": "2025-10-28"},
-    # {"keyword": "阿達", "start_date": "2025-11-05", "end_date": "2025-11-12"},
+    {"keyword": "王大陸", "start_date": "2025-02-18", "end_date": "2025-02-25"},
+    {"keyword": "坤達", "start_date": "2025-10-21", "end_date": "2025-10-28"},
+    {"keyword": "修杰楷", "start_date": "2025-10-21", "end_date": "2025-10-28"},
+    {"keyword": "阿達", "start_date": "2025-11-05", "end_date": "2025-11-12"},
     {"keyword": "陳零九", "start_date": "2025-05-14", "end_date": "2025-05-21"},
-    # {"keyword": "陳柏霖", "start_date": "2025-10-21", "end_date": "2025-10-28"},
+    {"keyword": "陳柏霖", "start_date": "2025-10-21", "end_date": "2025-10-28"},
     {"keyword": "書偉", "start_date": "2025-10-21", "end_date": "2025-10-28"},
-    # {"keyword": "小杰", "start_date": "2025-10-21", "end_date": "2025-10-28"}
+    {"keyword": "小杰", "start_date": "2025-10-21", "end_date": "2025-10-28"}
 ]
 
 MAX_SCROLL_TIMES = 50  # 每篇文章要在留言區捲動幾次 (載入更多留言)
