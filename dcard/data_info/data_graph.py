@@ -4,13 +4,13 @@ import matplotlib.font_manager as fm
 import os
 
 # Set the font path for Chinese characters
-font_path = '/usr/share/fonts/wenquanyi/wqy-zenhei/wqy-zenhei.ttc'
+font_path = '/usr/share/fonts/noto-cjk/NotoSansCJK-Regular.ttc'
 if os.path.exists(font_path):
     font_prop = fm.FontProperties(fname=font_path)
     plt.rcParams['font.family'] = font_prop.get_name()
 else:
     # Fallback to a default if the specific path doesn't exist (though we checked)
-    plt.rcParams['font.sans-serif'] = ['WenQuanYi Zen Hei', 'SimHei', 'Arial Unicode MS']
+    plt.rcParams['font.sans-serif'] = ['Noto Sans CJK TC', 'WenQuanYi Zen Hei', 'SimHei', 'Arial Unicode MS']
 
 def main():
     # Path to the JSON file
@@ -50,12 +50,13 @@ def main():
         height = bar.get_height()
         plt.text(bar.get_x() + bar.get_width()/2., height,
                  f'{height}',
-                 ha='center', va='bottom')
+                 ha='center', va='bottom', fontsize=14)
 
-    plt.title('Dcard 各藝人相關留言數量統計', fontproperties=font_prop, fontsize=16)
-    plt.xlabel('藝人', fontproperties=font_prop, fontsize=12)
-    plt.ylabel('留言數量', fontproperties=font_prop, fontsize=12)
-    plt.xticks(rotation=45, fontproperties=font_prop)
+    plt.title('Dcard 各藝人相關留言數量統計', fontproperties=font_prop, fontsize=24)
+    plt.xlabel('藝人', fontproperties=font_prop, fontsize=20)
+    plt.ylabel('留言數量', fontproperties=font_prop, fontsize=20)
+    plt.xticks(rotation=45, fontproperties=font_prop, fontsize=16)
+    plt.yticks(fontsize=16)
     
     # Adjust layout to prevent clipping of labels
     plt.tight_layout()
