@@ -6,7 +6,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import os
 
 # Load data
-input_file = '/tmp2/b14902031/TM/TM_Final_Project-Draft_Dodgers/dcard/dcard_comments_by_keyword.json'
+input_file = 'dcard_comments_by_keyword.json'
 with open(input_file, 'r', encoding='utf-8') as f:
     data = json.load(f)
 
@@ -93,7 +93,7 @@ for keyword, comments in data.items():
 sorted_keywords = sorted(results.items(), key=lambda x: x[1]['mean_similarity'], reverse=True)
 
 # Save results
-output_file = '/tmp2/b14902031/TM/TM_Final_Project-Draft_Dodgers/dcard/similarity_analysis_results.json'
+output_file = 'similarity/similarity_analysis_results.json'
 with open(output_file, 'w', encoding='utf-8') as f:
     json.dump(results, f, ensure_ascii=False, indent=4)
 

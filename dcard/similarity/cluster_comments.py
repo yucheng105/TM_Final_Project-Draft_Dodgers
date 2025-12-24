@@ -7,7 +7,7 @@ from sklearn.cluster import AgglomerativeClustering
 import os
 
 # Load data
-input_file = '/tmp2/b14902031/TM/TM_Final_Project-Draft_Dodgers/dcard/dcard_comments_by_keyword.json'
+input_file = 'dcard_comments_by_keyword.json'
 with open(input_file, 'r', encoding='utf-8') as f:
     data = json.load(f)
 
@@ -79,7 +79,7 @@ for keyword, comments in data.items():
         cluster_results[keyword] = sorted(suspicious_clusters, key=lambda x: x['size'], reverse=True)
 
 # Save results
-output_file = '/tmp2/b14902031/TM/TM_Final_Project-Draft_Dodgers/dcard/comment_clusters.json'
+output_file = 'similarity/comment_clusters.json'
 with open(output_file, 'w', encoding='utf-8') as f:
     json.dump(cluster_results, f, ensure_ascii=False, indent=4)
 
