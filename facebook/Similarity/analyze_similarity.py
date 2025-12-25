@@ -16,7 +16,7 @@ import os
 
 
 # Load data
-input_file = 'ig_comments.json'
+input_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'facebook_comments_by_keyword.json')
 with open(input_file, 'r', encoding='utf-8') as f:
     data = json.load(f)
 

@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[1]:
+# In[12]:
 
 
 import json
@@ -16,7 +16,7 @@ import re
 from sklearn.feature_extraction.text import CountVectorizer
 
 
-# In[2]:
+# In[13]:
 
 
 # check device
@@ -24,7 +24,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"目前使用的設備是: {device}")
 
 
-# In[3]:
+# In[14]:
 
 
 def clean_text(text):
@@ -43,8 +43,8 @@ def clean_text(text):
 # Read data
 ##############
 
-platform_name = "threads"
-input_file_name = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.dirname(__file__)))), "threads_comments_by_keyword.json")
+platform_name = "fb"
+input_file_name = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "facebook_comments_by_keyword.json")
 
 with open(input_file_name, "r", encoding="utf-8") as f:
     fb_comments_dict = json.load(f)
@@ -56,7 +56,7 @@ print()
 # 將全部留言存到all_comments
 all_comments = []
 for artist in fb_comments_dict:
-    if artist == '張書偉' or artist == '陳柏霖' or artist == '書偉':
+    if artist == '張書偉':
         continue
     all_comments += fb_comments_dict[artist]
     print(artist)
@@ -69,7 +69,7 @@ print("成功將所有留言存入all_comments_cleaned，並去除留言內的ur
 print(f"all_comments_cleaned共有{len(all_comments_cleaned)}篇貼文")
 
 
-# In[24]:
+# In[25]:
 
 
 ############
@@ -84,7 +84,7 @@ umap_model = UMAP(n_neighbors=15, n_components=5, min_dist=0.0, metric='cosine',
 
 # 3. 聚類模型 (HDBSCAN): 自動偵測分群
 # min_cluster_size: 一個主題最少要有幾則留言 (可根據資料量調整)
-min_size = 15
+min_size = 22
 hdbscan_model = HDBSCAN(min_cluster_size=min_size, metric='euclidean', cluster_selection_method='eom', prediction_data=True)
 
 # 4. 關鍵字提取 (Vectorizer): 排除停用詞
@@ -93,7 +93,7 @@ vectorizer_model = CountVectorizer(stop_words=["的", "了", "在", "是", "我"
 print(f"設定元件完畢{min_size}")
 
 
-# In[25]:
+# In[26]:
 
 
 #############
@@ -110,7 +110,7 @@ topic_model = BERTopic(
 topics, probs = topic_model.fit_transform(all_comments_cleaned)
 
 
-# In[26]:
+# In[27]:
 
 
 # 將離群值分配給最相似的主題
@@ -120,7 +120,7 @@ new_topics = topic_model.reduce_outliers(all_comments_cleaned, topics)
 topic_model.update_topics(all_comments_cleaned, topics=new_topics)
 
 
-# In[27]:
+# In[28]:
 
 
 ###################

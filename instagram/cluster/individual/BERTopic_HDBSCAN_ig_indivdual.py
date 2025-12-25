@@ -47,7 +47,7 @@ def clean_text(text):
 # Read data
 ##############
 
-input_file_name = "ig_comments.json"
+input_file_name = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "instagram_comments_by_keyword.json")
 platform_name = "ig"
 
 with open(input_file_name, "r", encoding="utf-8") as f:

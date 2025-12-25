@@ -14,3 +14,4 @@ hdbscan
 umap-learn
 pandas
 matplotlib
+tqdm

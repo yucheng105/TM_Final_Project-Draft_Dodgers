@@ -23,11 +23,11 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"目前使用的設備是: {device}")
 
 
-# In[4]:
+# In[3]:
 
 
 # Load data
-input_file = 'ig_comments.json'
+input_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'facebook_comments_by_keyword.json')
 with open(input_file, 'r', encoding='utf-8') as f:
     data = json.load(f)
 
@@ -99,7 +99,7 @@ for keyword, comments in data.items():
         cluster_results[keyword] = sorted(suspicious_clusters, key=lambda x: x['size'], reverse=True)
 
 # Save results
-output_file = 'jieba_comment_clusters_ig.json'
+output_file = 'jieba_comment_clusters.json'
 with open(output_file, 'w', encoding='utf-8') as f:
     json.dump(cluster_results, f, ensure_ascii=False, indent=4)
 

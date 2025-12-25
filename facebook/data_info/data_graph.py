@@ -9,11 +9,12 @@ if os.path.exists(font_path):
     font_prop = fm.FontProperties(fname=font_path)
     plt.rcParams['font.family'] = font_prop.get_name()
 else:
-    plt.rcParams['font.sans-serif'] = ['Noto Sans CJK TC', 'WenQuanYi Zen Hei', 'SimHei', 'Arial Unicode MS']
+    plt.rcParams['font.sans-serif'] = ['Microsoft JhengHei', 'Noto Sans CJK TC', 'WenQuanYi Zen Hei', 'SimHei', 'Arial Unicode MS']
+    font_prop = fm.FontProperties(family=plt.rcParams['font.sans-serif'])
 
 def main():
     # Path to the JSON file
-    json_file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'fb_comments.json')
+    json_file_path = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'facebook_comments_by_keyword.json')
     
     try:
         with open(json_file_path, 'r', encoding='utf-8') as f:
@@ -22,13 +23,30 @@ def main():
         print(f"Error: File not found at {json_file_path}")
         return
 
+    # Name mapping
+    name_mapping = {
+        '王大陸': '王大陸',
+        '王大陸資訊分享台灣站': '王大陸',
+        '坤達': '謝坤達',
+        '謝坤達': '謝坤達',
+        '修杰楷': '修杰楷',
+        '阿達': '阿達',
+        '陳柏霖': '陳柏霖',
+        '小杰': '廖允杰',
+        '廖允杰': '廖允杰',
+        '陳零九': '陳零九',
+        '書偉': '張書偉',
+        '張書偉': '張書偉'
+    }
+
     # Calculate statistics
     artist_stats = {}
     total_comments = 0
     
     for artist, comments in data.items():
+        standard_name = name_mapping.get(artist, artist)
         count = len(comments)
-        artist_stats[artist] = count
+        artist_stats[standard_name] = artist_stats.get(standard_name, 0) + count
         total_comments += count
         
     print(f"Facebook 平台總留言數量: {total_comments}")
@@ -37,8 +55,9 @@ def main():
         print(f"{artist}: {count}")
 
     # Prepare data for plotting
-    artists = list(artist_stats.keys())
-    counts = list(artist_stats.values())
+    target_order = ['王大陸', '謝坤達', '修杰楷', '阿達', '廖允杰', '陳零九']
+    artists = [artist for artist in target_order if artist in artist_stats]
+    counts = [artist_stats[artist] for artist in artists]
     
     # Create bar chart
     plt.figure(figsize=(12, 6))

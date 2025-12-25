@@ -1,7 +1,7 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# In[6]:
+# In[1]:
 
 
 import json
@@ -16,7 +16,7 @@ import re
 from sklearn.feature_extraction.text import CountVectorizer
 
 
-# In[7]:
+# In[2]:
 
 
 # check device
@@ -24,7 +24,7 @@ device = "cuda" if torch.cuda.is_available() else "cpu"
 print(f"目前使用的設備是: {device}")
 
 
-# In[8]:
+# In[3]:
 
 
 #######################
@@ -40,22 +40,22 @@ def clean_text(text):
     return text
 
 
-# In[9]:
+# In[4]:
 
 
 ##############
 # Read data
 ##############
 
-input_file_name = "fb_comments.json"
-platform_name = "fb"
+input_file_name = os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(__file__))), "instagram_comments_by_keyword.json")
+platform_name = "ig"
 
 with open(input_file_name, "r", encoding="utf-8") as f:
     comments_dict = json.load(f)
 print(f"成功從{input_file_name}讀取檔案至comments_dict\n")
 
 
-# In[23]:
+# In[5]:
 
 
 ############
@@ -82,7 +82,7 @@ vectorizer_model = CountVectorizer(stop_words=["的", "了", "在", "是", "我"
 print("設定元件完畢")
 
 
-# In[39]:
+# In[8]:
 
 
 for artist in comments_dict:
@@ -141,11 +141,15 @@ for artist in comments_dict:
     ###############
     # 圖形化顯示
     ###############
+
+    if artist == '王大陸資訊分享台灣站':
+        continue
+    
     folder_path = f"hbdscan_topics_result_idividual_graphs_/{artist}/{platform_name}"
 
     if not os.path.exists(folder_path):
         os.makedirs(folder_path)
-    
+
     # top_n_topics: 顯示前幾個主題
     # n_words: 每個主題顯示幾個關鍵字
     fig1 = topic_model.visualize_barchart(top_n_topics=15, n_words=10, height=600)
@@ -153,6 +157,7 @@ for artist in comments_dict:
     
     # 儲存為 HTML 檔（可以用瀏覽器開啟，保留互動功能）
     fig1.write_html(f"hbdscan_topics_result_idividual_graphs_/{artist}/{platform_name}/topic_barchart_{platform_name}_{artist}.html")
+
     
     # intertopic distance map
     fig2 = topic_model.visualize_topics()

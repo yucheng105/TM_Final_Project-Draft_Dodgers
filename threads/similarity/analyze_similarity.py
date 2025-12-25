@@ -6,7 +6,7 @@ from sklearn.metrics.pairwise import cosine_similarity
 import os
 
 # Load data
-input_file = 'all_artists_comments.json'
+input_file = os.path.join(os.path.dirname(os.path.dirname(__file__)), 'threads_comments_by_keyword.json')
 with open(input_file, 'r', encoding='utf-8') as f:
     data = json.load(f)
 
